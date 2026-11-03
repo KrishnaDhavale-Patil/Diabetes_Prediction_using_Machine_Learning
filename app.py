@@ -12,7 +12,6 @@ evaluation results.
 """
 
 import os
-import json
 import joblib
 import numpy as np
 import pandas as pd
@@ -27,6 +26,148 @@ st.set_page_config(
     page_title="Diabetes Prediction System",
     page_icon="🩺",
     layout="wide",
+)
+
+st.markdown(
+    """
+    <style>
+    :root {
+        --ink: #17324d;
+        --muted: #60758a;
+        --teal: #0f766e;
+        --line: #e2eaf0;
+        --surface: #ffffff;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(180deg, #f3f8fa 0%, #f7f9fc 45%, #f4f7fb 100%);
+        color: var(--ink);
+    }
+
+    [data-testid="stHeader"] {
+        background: rgba(243, 248, 250, 0.8);
+    }
+
+    .block-container {
+        max-width: 1240px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #102d43 0%, #123c4b 100%);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: #eef7f7;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        border-radius: 0.6rem;
+    }
+
+    h1, h2, h3 {
+        color: var(--ink);
+        letter-spacing: -0.025em;
+    }
+
+    [data-testid="stMetric"] {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 0.9rem;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 5px 18px rgba(23, 50, 77, 0.05);
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #526b7f !important;
+        opacity: 1;
+    }
+
+    [data-testid="stMetricLabel"] p {
+        color: #526b7f !important;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--ink) !important;
+        font-size: clamp(1.2rem, 1.8vw, 1.65rem);
+        line-height: 1.25;
+    }
+
+    [data-testid="stMetricValue"] div {
+        color: var(--ink) !important;
+        font-size: inherit !important;
+    }
+
+    .stButton > button {
+        min-height: 2.8rem;
+        border-radius: 0.65rem;
+        font-weight: 650;
+        transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(15, 118, 110, 0.16);
+    }
+
+    [data-testid="stDataFrame"],
+    [data-testid="stPlotlyChart"],
+    [data-testid="stAlert"] {
+        border-radius: 0.85rem;
+    }
+
+    .hero-card {
+        padding: 2.4rem 2.6rem;
+        margin: 0.25rem 0 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1.25rem;
+        color: #f3fbfb;
+        background: linear-gradient(120deg, #12354d 0%, #116b70 58%, #21a18c 100%);
+        box-shadow: 0 16px 38px rgba(18, 53, 77, 0.16);
+    }
+
+    .hero-card .eyebrow {
+        margin-bottom: 0.65rem;
+        color: #c9f3e9;
+        font-size: 0.78rem;
+        font-weight: 750;
+        letter-spacing: 0.13em;
+    }
+
+    .hero-card h1 {
+        margin: 0;
+        color: #ffffff;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        line-height: 1.08;
+    }
+
+    .hero-card p {
+        max-width: 760px;
+        margin: 1rem 0 0;
+        color: #e2f2f1;
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+
+    .section-kicker {
+        color: var(--teal);
+        font-size: 0.78rem;
+        font-weight: 750;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 700px) {
+        .hero-card {
+            padding: 1.6rem;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 MODELS_DIR = "models"
@@ -100,15 +241,6 @@ def load_feature_importance():
     return None
 
 
-@st.cache_data
-def load_best_model_name():
-    path = os.path.join(MODELS_DIR, "best_model.json")
-    if os.path.exists(path):
-        with open(path) as f:
-            return json.load(f)["best_model"]
-    return None
-
-
 # --------------------------------------------------------------------------
 # SIDEBAR NAVIGATION
 # --------------------------------------------------------------------------
@@ -136,41 +268,46 @@ if not artifacts_exist():
 # PAGE: HOME
 # --------------------------------------------------------------------------
 if page == "🏠 Home":
-    st.title("🩺 Diabetes Prediction System")
-    st.subheader("Machine Learning-based Diabetes Risk Prediction — Comparison of 4 Models")
-
-    st.write(
+    st.markdown(
         """
-        This project predicts the likelihood of diabetes in a patient using
-        machine learning, based on the well-known **Pima Indians Diabetes
-        Dataset**. Four different classification models were trained and
-        compared, so you can see how different algorithms perform on the
-        same medical data.
-        """
+        <div class="hero-card">
+            <div class="eyebrow">MACHINE LEARNING · EDUCATIONAL DEMO</div>
+            <h1>Explore diabetes<br>classification models</h1>
+            <p>Compare four machine-learning approaches, review their test-set
+            results, and explore how a prediction changes with the selected
+            model and measurements.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
+    metrics_df = load_metrics()
+    best_model_name = metrics_df["F1 Score"].idxmax()
+    best_f1 = metrics_df.loc[best_model_name, "F1 Score"]
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Models compared", len(MODEL_FILES))
+    col2.metric("Best model", best_model_name)
+    col3.metric("Best F1 score", f"{best_f1:.1%}")
+
+    st.markdown('<p class="section-kicker">Inside the dashboard</p>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### Models used")
-        st.markdown(
-            "- Logistic Regression\n"
-            "- Decision Tree\n"
-            "- Random Forest\n"
-            "- Support Vector Machine (SVM)"
+        st.markdown("### Make a prediction")
+        st.write(
+            "Enter the eight dataset measurements, choose a classifier, "
+            "and inspect its prediction and probability output when available."
         )
     with col2:
-        st.markdown("#### What you can do here")
-        st.markdown(
-            "- Predict diabetes risk from patient measurements\n"
-            "- Compare model performance (accuracy, precision, recall, F1)\n"
-            "- View confusion matrices for each model\n"
-            "- Explore which features matter most"
+        st.markdown("### Understand model behavior")
+        st.write(
+            "Review accuracy, precision, recall, F1 score, confusion matrices, "
+            "and feature importance for the saved training run."
         )
 
-    best = load_best_model_name()
-    if best:
-        st.success(f"Best performing model on this dataset (highest F1 Score): **{best}**")
-
+    st.caption(
+        "The model comparison uses one stratified 80/20 test split. "
+        "Scores are educational examples, not clinical performance guarantees."
+    )
     st.warning(DISCLAIMER)
 
 

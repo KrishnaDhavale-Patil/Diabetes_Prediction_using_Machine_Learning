@@ -1,148 +1,219 @@
-# 🩺 Diabetes Prediction Using Machine Learning – Comparison of 4 Models
+<div align="center">
 
-## Project Description
+# Diabetes Prediction Using Machine Learning
 
-This project predicts whether a patient is likely to have diabetes using
-machine learning, based on the **Pima Indians Diabetes Dataset**. Four
-different classification models are trained on the same data and compared,
-so you can see which algorithm performs best on this problem. A Streamlit
-web app lets users enter patient measurements and get an instant prediction.
+### An educational Streamlit dashboard for exploring diabetes classification models
 
-## Objectives
+[![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![scikit--learn](https://img.shields.io/badge/ML-scikit--learn-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 
-- Build a complete, working diabetes prediction pipeline from raw data to
-  a usable web app.
-- Train and fairly compare four different ML classification algorithms.
-- Present results (accuracy, precision, recall, F1-score, confusion
-  matrices, feature importance) in an easy-to-understand dashboard.
+</div>
 
-## Dataset
+This project trains and compares four machine-learning classifiers using the
+Pima Indians Diabetes dataset. Its interactive dashboard lets you enter
+measurements to see a model prediction and explore the saved evaluation
+metrics, confusion matrices, and tree-based feature importance.
 
-**Pima Indians Diabetes Dataset** (`diabetes.csv`) — a widely used medical
-dataset containing diagnostic measurements for female patients, used to
-predict the onset of diabetes.
+> **Medical disclaimer:** This is a learning and demonstration project, not a
+> medical device. Its predictions are not a diagnosis or medical advice. Do
+> not use them to make health decisions; consult a qualified healthcare
+> professional.
 
-> ⚠️ You must download `diabetes.csv` yourself (e.g. from Kaggle) and place
-> it in the project root folder, next to `train_models.py`.
+## Contents
 
-## Input Features
+- [What the project does](#what-the-project-does)
+- [Technology stack](#technology-stack)
+- [How it works](#how-it-works)
+- [Models and saved evaluation](#models-and-saved-evaluation)
+- [Dataset and features](#dataset-and-features)
+- [Project structure](#project-structure)
+- [Setup and run](#setup-and-run)
+- [Limitations](#limitations)
+- [Ideas for future work](#ideas-for-future-work)
 
-| Feature | Description |
+## What the project does
+
+- Trains Logistic Regression, Decision Tree, Random Forest, and Support
+  Vector Machine (SVM) classifiers.
+- Compares the models using accuracy, precision, recall, and F1 score.
+- Accepts eight measurements in the dashboard and displays a prediction from
+  the selected model.
+- Presents model metrics, confusion matrices, and feature importance in
+  separate dashboard views.
+- Saves trained models and evaluation artifacts under `models/`, so the
+  dashboard can load them without retraining.
+
+## Technology stack
+
+| Area | Technologies | Role |
+|---|---|---|
+| Language | Python | Training, data preparation, inference, and app logic |
+| Frontend / UI | Streamlit | Renders the interactive, multipage web dashboard |
+| Backend / ML | scikit-learn | Splitting data, scaling features, training classifiers, and calculating metrics |
+| Data handling | Pandas, NumPy | Reading and preparing tabular data and feature values |
+| Charts | Matplotlib, Seaborn | Model comparison chart and confusion-matrix visualizations |
+| Model persistence | Joblib | Saving and loading models, scaler, and evaluation artifacts |
+
+There is no separate JavaScript frontend, REST API, or database in this
+project. Streamlit serves the UI and invokes the Python prediction and
+visualization code directly.
+
+## How it works
+
+### Training pipeline
+
+Running `train_models.py` performs these steps:
+
+1. Loads `diabetes.csv` and checks that the eight input columns and `Outcome`
+   target column are present.
+2. Removes duplicate rows and rows with missing values.
+3. Splits the features and target into stratified training and test sets
+   (80/20, with `random_state=42`).
+4. Treats zero readings in Glucose, BloodPressure, SkinThickness, Insulin,
+   and BMI as missing measurements. It replaces these with medians computed
+   from the training set only, then applies the same medians to the test set.
+5. Fits a `StandardScaler` on the training features and applies it to both
+   sets.
+6. Trains and evaluates all four classifiers on the same scaled data.
+7. Saves the trained models, scaler, metrics, confusion matrices, selected
+   best model, and available tree-based feature importances in `models/`.
+
+### Dashboard
+
+`app.py` loads the saved artifacts and offers these views:
+
+| View | What it shows |
 |---|---|
-| Pregnancies | Number of times pregnant |
-| Glucose | Plasma glucose concentration |
-| BloodPressure | Diastolic blood pressure (mm Hg) |
-| SkinThickness | Triceps skin fold thickness (mm) |
-| Insulin | 2-Hour serum insulin (mu U/mL) |
-| BMI | Body Mass Index |
-| DiabetesPedigreeFunction | Genetic diabetes risk score |
-| Age | Age in years |
+| Home | Project overview and the best model in the saved results |
+| Prediction | Patient measurement inputs, model selection, predicted class, and probability when supported |
+| Model Comparison | Evaluation metrics and a model comparison chart |
+| Confusion Matrices | Correct and incorrect classifications for each model |
+| Feature Importance | Random Forest and Decision Tree feature importances, when available |
+| About Project | Dataset, feature, and limitation details |
 
-## Target Variable
+The dashboard expects the artifacts created by the training script. This
+repository includes a `models/` directory with trained artifacts, so you can
+try the app without retraining, provided the installed library versions can
+load them.
 
-`Outcome` — `0` = No Diabetes, `1` = Diabetes
+## Models and saved evaluation
 
-## Technologies
+The checked-in `models/metrics.csv` records the following scores from the
+project's stratified 80/20 test split:
 
-Python, Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn, Streamlit, Joblib
+| Model | Accuracy | Precision | Recall | F1 score |
+|---|---:|---:|---:|---:|
+| Logistic Regression | 0.7078 | 0.5882 | 0.5556 | 0.5714 |
+| Decision Tree | 0.8117 | 0.7451 | 0.7037 | 0.7238 |
+| Random Forest | 0.8636 | 0.8113 | 0.7963 | 0.8037 |
+| SVM | 0.8377 | 0.7636 | 0.7778 | 0.7706 |
 
-## Machine Learning Models
+In this saved run, Random Forest has the highest F1 score. These values
+describe one train/test split, not a clinical performance guarantee; results
+may vary if the dataset or training procedure changes.
 
-1. **Logistic Regression** — simple, interpretable linear baseline model.
-2. **Decision Tree** — captures non-linear patterns, easy to visualize.
-3. **Random Forest** — ensemble of trees, usually strong and robust.
-4. **Support Vector Machine (SVM)** — effective for complex decision boundaries.
+## Dataset and features
 
-## Project Workflow
+The project includes `diabetes.csv`, based on the Pima Indians Diabetes
+dataset. Each row contains measurements and an `Outcome` label:
 
-1. Load and clean the dataset (duplicates, missing values, invalid zeros).
-2. Split features (`X`) and target (`y`).
-3. Train-test split (80/20, stratified).
-4. Handle invalid zero values using training-set medians (no data leakage).
-5. Scale features with `StandardScaler`.
-6. Train all four models on identical preprocessed data.
-7. Evaluate each model with accuracy, precision, recall, and F1-score.
-8. Save trained models, scaler, and results to the `models/` folder.
-9. Serve predictions and results through a Streamlit dashboard.
+- `0` — no diabetes recorded
+- `1` — diabetes recorded
 
-## Project Structure
+| Input feature | Meaning |
+|---|---|
+| `Pregnancies` | Number of times pregnant |
+| `Glucose` | Plasma glucose concentration (mg/dL) |
+| `BloodPressure` | Diastolic blood pressure (mm Hg) |
+| `SkinThickness` | Triceps skin-fold thickness (mm) |
+| `Insulin` | 2-hour serum insulin (mu U/mL) |
+| `BMI` | Body mass index |
+| `DiabetesPedigreeFunction` | Diabetes pedigree function score |
+| `Age` | Age in years |
 
-```
-diabetes-prediction/
-│
-├── app.py                 # Streamlit web application
-├── train_models.py        # Training & evaluation script
-├── diabetes.csv           # Dataset (you must add this)
-├── models/                 # Created automatically after training
-│   ├── logistic_regression.pkl
-│   ├── decision_tree.pkl
-│   ├── random_forest.pkl
-│   ├── svm.pkl
-│   ├── scaler.pkl
-│   ├── feature_names.pkl
-│   ├── metrics.csv
-│   ├── confusion_matrices.pkl
-│   ├── feature_importance.csv
-│   └── best_model.json
-│
-├── requirements.txt
+The training script interprets zero values in Glucose, BloodPressure,
+SkinThickness, Insulin, and BMI as unavailable readings and imputes them
+using training-set medians. A zero in `Pregnancies` is retained.
+
+## Project structure
+
+```text
+.
+├── app.py                         # Streamlit dashboard and prediction UI
+├── train_models.py                # Data preparation, training, and evaluation
+├── diabetes.csv                   # Dataset
+├── requirements.txt               # Python package dependencies
+├── models/
+│   ├── logistic_regression.pkl     # Trained Logistic Regression model
+│   ├── decision_tree.pkl          # Trained Decision Tree model
+│   ├── random_forest.pkl          # Trained Random Forest model
+│   ├── svm.pkl                    # Trained SVM model
+│   ├── scaler.pkl                 # Fitted StandardScaler
+│   ├── feature_names.pkl          # Input feature order
+│   ├── metrics.csv                # Evaluation metrics
+│   ├── confusion_matrices.pkl     # Confusion matrices
+│   ├── feature_importance.csv     # Tree-based feature importances
+│   └── best_model.json            # Model with highest F1 score
 └── README.md
 ```
 
-## Installation
+## Setup and run
+
+Use Python with `pip`. From the project root, install the dependencies:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-## Training Instructions
-
-1. Place `diabetes.csv` in the project root folder.
-2. Run:
-
-```bash
-python train_models.py
-```
-
-This trains all four models, prints evaluation metrics to the console, and
-saves everything needed by the app into the `models/` folder.
-
-## Running Instructions
-
-After training completes:
+### Start the dashboard with the included models
 
 ```bash
 streamlit run app.py
 ```
 
-Then open the local URL Streamlit shows you (usually `http://localhost:8501`).
+Open the local address printed by Streamlit (typically
+`http://localhost:8501`).
 
-## Model Comparison
+### Retrain the models
 
-The exact numbers depend on your copy of the dataset, but the app's
-**📊 Model Comparison** page will show a table and bar chart of Accuracy,
-Precision, Recall, and F1-score for all four models, computed live from
-`models/metrics.csv` (generated by `train_models.py` — no numbers are
-hard-coded).
+The dataset is already included. To regenerate the model and evaluation
+artifacts, run:
+
+```bash
+python train_models.py
+```
+
+Then start or refresh the dashboard:
+
+```bash
+streamlit run app.py
+```
+
+`train_models.py` expects the dataset at `diabetes.csv` in the project root
+and requires the columns listed in [Dataset and features](#dataset-and-features).
 
 ## Limitations
 
-- The dataset only covers female patients of Pima Indian heritage — results
-  may not generalize to other populations.
-- The dataset is relatively small (~768 rows), which limits model robustness.
-- This is an educational project, not a certified diagnostic tool.
-- Feature importance shows what the model relied on, not medical causation.
+- The dataset represents a specific population of Pima Indian women; it does
+  not establish that the models generalize to other populations.
+- The dataset is limited in size and scope. A single holdout split is not a
+  substitute for cross-validation or external validation.
+- The displayed probabilities are model outputs, not calibrated clinical
+  risk estimates.
+- Feature importance describes how a tree model used features; it does not
+  show medical causation.
+- No clinical validation, privacy controls, authentication, or deployment
+  hardening is provided.
 
-## Future Scope
+## Ideas for future work
 
-- Try additional models (XGBoost, Gradient Boosting, Neural Networks).
-- Use cross-validation and hyperparameter tuning for stronger evaluation.
-- Deploy the app publicly (Streamlit Community Cloud, etc.).
-- Collect a larger, more diverse dataset.
-
----
-
-> **Disclaimer:** This project is for educational purposes only. The
-> prediction is generated by a machine learning model and should not be
-> considered a medical diagnosis. Consult a qualified healthcare
-> professional for medical advice.
+- Add cross-validation, hyperparameter tuning, and calibration analysis.
+- Evaluate on a larger, more representative dataset and document its
+  provenance and license.
+- Improve input validation and explain how unavailable measurements are
+  handled at prediction time.
+- Add automated tests for preprocessing, training outputs, and dashboard
+  prediction behavior.
+- If deploying publicly, add appropriate privacy, security, and clinical
+  review rather than presenting the app as a diagnostic service.
